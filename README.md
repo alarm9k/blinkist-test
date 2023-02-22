@@ -32,7 +32,7 @@ The user goes to the original page's URL. The html starts to load and the inline
 - If the bot _does_ run javascript (like Googlebot), the script will check the UserAgent string and will exit if it detects a search bot. In this case the bot will also get the original page for indexing.
 
 # How tracking works
-The javascript sends the userID, the current page, and the tracked event type (in case of events) to the tracking endpoints.
+The javascript sends the current page and the tracked event type (in case of events) to the tracking endpoints. The userId and test group they belong to (if any) are taken from the cookies.
 
 # Other notes
 This is a POC, which means that a lot of corners have been cut. That includes project tooling, lack of defensiveness in the code (no checks, sanitization, validations, etc), testing, etc.
