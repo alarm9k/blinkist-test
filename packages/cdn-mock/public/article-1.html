@@ -84,7 +84,7 @@
                         if (res.pageId !== undefined) {
                             // A defined value means that a test exists for this page, and we have been assigned
                             // to one of the groups (control or one of the test groups).
-                            abTestAction();
+                            abTestAction(res.pageId);
                         }
                     });
             }

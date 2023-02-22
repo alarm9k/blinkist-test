@@ -6,7 +6,7 @@ This is a coding challenge I was asked to do at Blinkist. The task description i
 - From the project root run `yarn install`.
 - From `packages/backend` run `yarn start` to start the API on port 3001.
 - From `packages/cdn-mock` run `yarn start` to start the CDN mock on port 3002, which is a simple http-server that serves static html.
-- In the browser go to `http://127.0.0.1:3002/article-1.html` to load the sample article. You will either see the original article or the test article, assigned randomly. The choice persists on page reloads.
+- In the browser go to `http://127.0.0.1:3002/article-1.html` to load the sample article. You will either see the original article or the test article, assigned randomly. The choice persists on page reloads. To emulate a new user and potentially be assigned to another group, delete the cookies for `http://127.0.0.1:3002` and refresh the page. The AB-testing and the tracking APIs will thus treat the client as a new user and will issue new cookies.
 
 # System design
 ## Implemented design
