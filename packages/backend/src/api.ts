@@ -1,13 +1,15 @@
 import {Router} from 'express';
 import {v4 as uuid} from 'uuid';
 import {getABTestsForPage} from './database-mock';
-import {testRandomizerMock} from './utils';
+import {logABTestGroup, testRandomizerMock} from './utils';
 
 export const api = Router();
 
 api.post('/track-event', async (req, res) => {
     if (req.cookies && req.cookies.userId) {
         console.log(`Tracking event "${req.body.event}" for location "${req.body.path}", user: "${req.cookies.userId}"`);
+        if(req.cookies && req.cookies[`ab-test-${req.body.path}`] !== undefined) {}
+        logABTestGroup(req.cookies, req.body.path);
     }
     res.send({});
 });
@@ -18,6 +20,7 @@ api.post('/track-page-view', async (req, res) => {
         res.cookie('userId', uuid()).send({});
     } else {
         console.log(`Tracking page view, location "${req.body.path}", user "${req.cookies.userId}"`);
+        logABTestGroup(req.cookies, req.body.path);
         res.send({});
     }
 });
