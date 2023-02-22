@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Normal article 1</title>
+
+    <script>
+        // The code is inlined to avoid another trip to the server to fetch the javascript. Parsing this amount of
+        // javascript at the top of the page is less expensive than fetching a js bundle over the network. This code
+        // would be minified and injected into the page during the build/publish stage.
+        function httpPost(url, body) {
+            return fetch(url, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+                .then(res => res.json());
+        }
+
+        // A very unsophisticated Googlebot detector. In real life should include checks for other known crawlers.
+        function userAgentIsRobot() {
+            return window.navigator.userAgent.includes('Googlebot');
+        }
+
+        function getCookieValue(cookieName) {
+            const nameValuePair = document.cookie.split(';')
+                .find(item => item.trim().startsWith(`${cookieName}`));
+            if (nameValuePair) {
+                return nameValuePair.split('=')[1];
+            }
+        }
+
+        const apiUrl = 'http://127.0.0.1:3001';
+
+        // Hides the <html> tag to avoid the "control flash" when the original page is replaced by the test content.
+        function hideHtml(hide) {
+            document.getElementsByTagName('html')[0].style['display'] = hide ? 'none' : '';
+        }
+
+        // Based on the specified pageID (which is a page's URL) either loads another page's html and replaces the
+        // current one, or just does nothing if we are in the control group.
+        function abTestAction(pageId) {
+            if (pageId !== '') {
+                console.log('We are in the test group, must reload the page');
+                fetch(`${pageId}`)
+                    .then(res => res.text())
+                    .then(resText => {
+                        const html = resText.match(/<html .*?>(.*)<\/html>/s)[1];
+                        document.getElementsByTagName('html')[0].innerHTML = html;
+                        hideHtml(false);
+
+                        // Must rerun the tracking init code to re-attach the listeners to the new html elements.
+                        initTracking();
+                    });
+            } else {
+                console.log('We are in the control group, viewing original page');
+                hideHtml(false);
+                window.onload = initTracking;
+            }
+        }
+
+        function checkABTestStatus() {
+            hideHtml(true);
+
+            // The page URL is unique and is a good candidate to serve as the page ID. Other forms of IDs would
+            // require additional steps to be translated to the page's address.
+            const pageId = window.location.pathname;
+            const cookieValue = getCookieValue(`ab-test-${pageId}`);
+
+            if (cookieValue !== undefined) {
+                // We already have a cookie for this particular page, which means we are already assigned to one
+                // of the groups in this AB-test.
+                abTestAction(cookieValue);
+            } else {
+                // We don't have an AB-test cookie for this article. This means that there hasn't been an AB-test
+                // yet when we viewed this article in the past, or this is the first time we are visiting this URL.
+                // In both cases we need to check the AB-testing endpoint to see if there are tests running for this
+                // page.
+                httpPost(`${apiUrl}/abtest`, {pageId})
+                    .then(res => {
+                        if (res.pageId !== undefined) {
+                            // A defined value means that a test exists for this page, and we have been assigned
+                            // to one of the groups (control or one of the test groups).
+                            abTestAction();
+                        }
+                    });
+            }
+        }
+
+        function trackPageView() {
+            return httpPost(
+                `${apiUrl}/track-page-view`,
+                {path: window.location.pathname}
+            );
+        }
+
+        function trackEvent(eventType) {
+            return httpPost(
+                `${apiUrl}/track-event`,
+                {path: window.location.pathname, event: eventType}
+            );
+        }
+
+        function trackClicks() {
+            document.querySelectorAll('[data-tracking-trigger="click"]')
+                .forEach(item => {
+                    item.addEventListener('click', (event) => {
+                        trackEvent(event.target.getAttribute('data-tracking-event'));
+                    });
+                });
+        }
+
+        function initTracking() {
+            trackPageView();
+            trackClicks();
+        }
+
+        if (!userAgentIsRobot()) {
+            checkABTestStatus();
+        }
+    </script>
+</head>
+<body>
+<p>This is a normal article 1</p>
+
+<div>
+    <img src="img.png" style="width: 300px" alt="sign up"/>
+</div>
+
+<button data-tracking-trigger="click" data-tracking-event="signup">Sign up</button>
+</body>
+</html>

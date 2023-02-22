@@ -1,0 +1,22 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Blinkist test backend",
+  "main": "dist/index.js",
+  "author": "Dima Slivin",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "nodemon --watch 'src/**' --ext 'ts,json' --ignore 'src/**/*.spec.ts' --exec 'tsc -b && node dist/index.js'"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^6.0.1",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.3"
+  }
+}
